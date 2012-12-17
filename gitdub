@@ -1,0 +1,151 @@
+#!/usr/bin/env ruby
+
+require 'fileutils'
+require 'git'
+require 'json'
+require 'sinatra'
+require 'yaml'
+
+def which(cmd)
+  ENV['PATH'].split(File::PATH_SEPARATOR).each do |path|
+    exe = "#{path}/#{cmd}"
+    return exe if File.executable?(exe)
+  end
+  nil
+end
+
+raise 'could not find git-notifier in $PATH' unless which('git-notifier')
+
+if ARGV.size() != 1
+  STDERR.puts "usage: #{$0} <config.yml>" unless ARGV.size() == 1
+  exit 1
+end
+
+CONFIG = YAML.load_file(ARGV[0])
+
+class GitNotifier
+  STATE_FILE = '.git-notifier.dat'
+
+  private
+
+  MAPPINGS = {
+    'from' => 'sender',
+    'to' => 'mailinglist',
+    'subject' => 'emailprefix'
+  }
+
+  public
+
+  def self.init(path, opts = {})
+    state_file = File.join(path, STATE_FILE)
+    if File.exists?(state_file)
+      STDERR.puts('git-notifier state already exists, skipping initialization')
+      return
+    end
+
+    opts[:updateonly] = true
+    if not self.execute(path, opts)
+      raise 'git-notifer could not initialize repository'
+    end
+
+    true
+  end
+
+  def self.run(path, opts)
+    success = execute(path, Hash[opts.map { |k, v| [MAPPINGS[k] || k, v] }])
+    STDERR.puts('git-notifier failed') unless success
+    success
+  end
+
+  private
+
+  def self.execute(path, args = [])
+    args = args.map do |k, v|
+      v = v * ',' if k == 'mailinglist'
+      next unless v
+      ["--#{k}"] + (!!v == v ? [] : ["#{v}"]) # Ignore non-boolean values.
+    end
+    STDERR.puts("git-notifier #{args.flatten.reject { |x| x.nil? }}")
+    current = Dir.pwd()
+    Dir.chdir(path)
+    success = system('git-notifier', *args.flatten.delete_if { |x| x.nil? })
+    Dir.chdir(current)
+    success
+  end
+end
+
+class GitDub
+  def initialize(notifier, github)
+    @notifier = notifier
+    @github = github
+  end
+
+  def process(push)
+    user = push['repository']['owner']['name']
+    repo = push['repository']['name']
+    
+    opts = @notifier
+    opts['debug'] = true
+    opts['noupdate'] = true
+
+    dir = File.join(user, repo)
+    if not Dir.exists?(dir)
+      STDERR.puts("cloning new repository into #{dir}")
+      if not Git.clone("git@github.com:#{user}/#{repo}", dir)
+        STDERR.puts("git failed to clone repository #{user}/#{repo}")
+        FileUtils.rm_rf(dir) if File.exists?(dir)
+      end
+
+      # Do not keep empty user directories.
+      if Dir[File.join(user, '*')].empty?
+        Dir.rmdir(user)
+      end
+    end
+
+    if not File.exists?(File.join(dir, GitNotifier::STATE_FILE))
+      STDERR.puts('initializing git-notifier for new repository')
+      GitNotifier.init(dir, opts)
+    end
+
+    github_url = push['repository']['url']
+    opts['link'] = "#{github_url}/compare/#{push['before']}...#{push['after']}"
+    @github.each do |entry|
+      if "#{user}\/#{repo}" =~ Regexp.new(entry['id'])
+        STDERR.puts("found matching entry: #{entry['id']}")
+        opts = opts.merge(entry.reject { |k, v| k == 'id' })
+        return GitNotifier.run(dir, opts)
+      end
+    end
+  end
+end
+
+#
+# Sinatra
+#
+
+configure do
+  set(:port, CONFIG['gitdub']['port'])
+  set(:bind, CONFIG['gitdub']['bind']) 
+
+  dir = CONFIG['gitdub']['directory']
+  if dir != '.'
+    STDERR.puts("switching directory to #{dir}")
+    Dir.chdir(dir)
+  end
+
+  $gitdub = GitDub.new(CONFIG['notifier'], CONFIG['github'])
+end
+
+get '/' do
+  "Use #{request.url} as WebHook URL in your github repository settings."
+end
+
+post '/' do
+  sources = CONFIG['gitdub']['allowed_sources']
+  if not sources.empty? and not sources.include?(request.ip)
+    STDERR.puts("discarding request from disallowed address #{request.ip}")
+    return
+  end
+
+  $gitdub.process(JSON.parse(params[:payload]))
+end

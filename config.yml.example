@@ -1,0 +1,43 @@
+gitdub:
+  # Bind to all addresses by default.
+  bind: 0.0.0.0 
+
+  # The TCP port to listen on.
+  port: 8888
+
+  # The directory where gitdub keeps the repositories.
+  directory: .
+
+  # Only process POST requests from the these IP addresses (optioanl). If empty
+  # or not set, gitdub processes requests from all addresses.
+  # 
+  # Github only.
+  #allowed_sources: [207.97.227.253, 50.57.128.197, 108.171.174.17]
+  #
+  allowed_sources: []
+
+notifier:
+  # The email sender. (Can be overriden for each repository.)
+  from: 'Sam Sender <foo@host.com>'
+
+  # The list of email receivers. (Can be overriden for each repository.)
+  #
+  # Default: system username
+  to: ['Rob Receiver <bar@host.com>', 'Ralph Receiver <baz@host.com>']
+
+  # The email subject prefix. (Can be overriden for each repository.)
+  #
+  # Default: '[git]'
+  subject: '[git]'
+
+# The github configuration. Each entry represents either a single repository or
+# all repositories for a given user/organization name.
+github:
+  # A wildcard entry that specifies settings for all repositories of a user or
+  # organization.
+  - id: mavam/.*
+    subject: '[foo]' # Override global subject.
+    to: [vallentin@icir.org] # Overrides global receiver.
+  # A basic entry specifying settings for a single repository.
+  - id: mavam/gitdub
+    from: gitdub # Overrides global sender.
