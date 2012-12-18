@@ -53,8 +53,8 @@ class GitNotifier
     success = true
     Dir.chdir(path)
     begin
-      success = system('git', 'pull')
-      raise "git pull failed in #{path}" unless success
+      success = system('git', 'fetch')
+      raise "git fetch failed in #{path}" unless success
       args = args.flatten.delete_if { |x| x.nil? }
       success = system('git-notifier', *args)
       raise "git-notifier failed in #{path} with args: #{args}" unless success
@@ -81,8 +81,9 @@ class GitDub
     # Update the corresponding repository via git.
     dir = File.join(user, repo)
     if not Dir.exists?(dir)
-      STDERR.puts("cloning new repository into #{dir}")
-      if not system('git', 'clone', "git@github.com:#{user}/#{repo}", dir)
+      github_url = "git@github.com:#{user}/#{repo}"
+      STDERR.puts("cloning #{github_url}")
+      if not system('git', 'clone', '--bare', github_url, dir)
         STDERR.puts("git failed to clone repository #{user}/#{repo}")
         FileUtils.rm_rf(dir) if File.exists?(dir)
       end
