@@ -13,7 +13,7 @@ Dependencies
 ------------
 
   - Ruby 1.9
-  - `gem install git sinatra`
+  - `gem install sinatra`
   - [git-notifier][git-notifier] (master branch required)
 
 Installation

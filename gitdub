@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 
 require 'fileutils'
-require 'git'
 require 'json'
 require 'sinatra'
 require 'yaml'
@@ -51,8 +50,18 @@ class GitNotifier
       ["--#{k}"] + (!!v == v ? [] : ["#{v}"]) # Ignore non-boolean values.
     end
     current = Dir.pwd()
+    success = true
     Dir.chdir(path)
-    success = system('git-notifier', *args.flatten.delete_if { |x| x.nil? })
+    begin
+      success = system('git', 'pull')
+      raise "git pull failed in #{path}" unless success
+      args = args.flatten.delete_if { |x| x.nil? }
+      p args
+      success = system('git-notifier', *args)
+      raise "git-notifier failed in #{path} with args: #{args}" unless success
+    rescue Exception => e
+      STDERR.puts(e)
+    end
     Dir.chdir(current)
     success
   end
@@ -72,13 +81,9 @@ class GitDub
 
     # Update the corresponding repository via git.
     dir = File.join(user, repo)
-    if Dir.exists?(dir)
-      if not Git.open(dir).pull()
-        STDERR.puts("pull failed for #{dir}")
-      end
-    else
+    if not Dir.exists?(dir)
       STDERR.puts("cloning new repository into #{dir}")
-      if not Git.clone("git@github.com:#{user}/#{repo}", dir)
+      if not system('git', 'clone', "git@github.com:#{user}/#{repo}", dir)
         STDERR.puts("git failed to clone repository #{user}/#{repo}")
         FileUtils.rm_rf(dir) if File.exists?(dir)
       end
@@ -93,12 +98,8 @@ class GitDub
     @github.each do |entry|
       if "#{user}\/#{repo}" =~ Regexp.new(entry['id'])
         opts.merge!(entry.reject { |k, v| k == 'id' })
-        if not File.exists?(File.join(dir, GitNotifier::STATE_FILE))
-          opts.merge!({updateonly: true})
-          STDERR.puts('initializing git-notifier for new repository')
-          return GitNotifier.run(dir, opts)
-        end
-        STDERR.puts("running git-notifier for #{user}/#{repo}")
+        state_file = File.join(dir, GitNotifier::STATE_FILE)
+        opts.merge!({updateonly: true}) unless File.exists?(state_file)
         return GitNotifier.run(dir, opts)
       end
     end
