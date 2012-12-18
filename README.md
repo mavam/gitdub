@@ -39,7 +39,7 @@ Customizing
 ===========
 
 The [YAML](http://www.yaml.org) configuration file contains the list of
-repositories that gitdub tracks. The first section `(gitdub:)` specifies global
+repositories that gitdub tracks. The first section (`gitdub:`) specifies global
 options, such as the interfaces gitdub should bind to and ports to listen on. 
 Moreover, you can control the behavior of the first chunk of data. When setting
 `silent_init:` to true, gitdub will only fast-forward to the current commit and
@@ -47,7 +47,7 @@ begin mailing diffs after the next push (or after hitting the *Test Hook*
 button). Otherwise gitdub sends exactly one email per commit since the first
 commit in the repository.
 
-The second section `(notifier:)` describes the behavior of git-notifier. Here you
+The second section (`notifier:`) describes the behavior of git-notifier. Here you
 can the configure a global sender of the emails (`from:`), the receivers
 (`to:`), and the prefix of the email subject (`subject:`).
 
