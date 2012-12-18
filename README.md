@@ -16,7 +16,7 @@ Setup
   - [git-notifier][git-notifier]
 
 ### Installation
-  
+
   1. `cp gitdub /path/to/dir/in/$PATH`
   2. `cp config.yml.example config.yml`
   3. `gitdub config.yml`
@@ -26,10 +26,11 @@ Setup
   1. Navigate to a repository you own, e.g., `https://github.com/user/repo`
   2. Click on *Settings* on the top-right corner
   3. Click on *Service Hooks* in the left sidebar
-  4. Select the first service called *WebHook URLs*
+  4. Select the first service *WebHook URLs*
   5. Enter the URL to reach gitdub, e.g., `http://gitdub.mydomain.com:8888/`
-  6. Click *Test Hook* to let github initialize the repository
-  7. Click *Update Settings* to save your changes
+  6. Click *Update Settings* to save your changes
+  7. Click again on *WebHook URLs*
+  6. Click *Test Hook* to let github initialize your repository
 
 Customizing
 ===========
@@ -59,16 +60,17 @@ e.g.:
 
     github:
       - id: mavam/gitdub
-        subject: '[foo]'           # Override global '[git]' subject prefix.
-        from: [vallentin@icir.org] # Overrides global sender.
+        subject: '[git/gitdub]'    # Overrides global '[git]' subject prefix.
+        from: vallentin@icir.org   # Overrides global sender.
+        to: [vallentin@icir.org]   # Overrides global receivers.
 
       - id: mavam/.*
         from: mavam                # Overrides global sender.
 
 Note the regular expression in the second entry. This enables the configuration
 of entire sets of repositories. Since gitdub processes the list sequentially in
-order of definition, the settings of the first match apply. For example, a
-subsequent entry for `mavam/foo` would never match.
+order of definition, only settings from the first match apply. For example,
+appending an entry for `mavam/foo` would never match.
 
 ### Restricting Access
 
