@@ -53,7 +53,7 @@ class GitNotifier
     success = true
     Dir.chdir(path)
     begin
-      success = system('git', 'fetch')
+      success = system('git', 'fetch', 'origin', '+refs/heads/*:refs/heads/*')
       raise "git fetch failed in #{path}" unless success
       args = args.flatten.delete_if { |x| x.nil? }
       success = system('git-notifier', *args)
