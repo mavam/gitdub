@@ -5,8 +5,8 @@ gitdub:
   # The TCP port to listen on.
   port: 8888
 
-  # The directory where gitdub keeps the repositories.
-  directory: .
+  # The directory where gitdub keeps its per-repository state.
+  directory: .gitdub
 
   # Only process POST requests from the these IP addresses (optioanl). If empty
   # or not set, gitdub processes requests from all addresses.
@@ -24,10 +24,10 @@ gitdub:
 
 notifier:
   # The email sender. (Can be overriden for each repository.)
-  from: 'Sam Sender <foo@host.com>'
+  from: gitdub
 
   # The list of email receivers. (Can be overriden for each repository.)
-  to: ['Rob Receiver <bar@host.com>', 'Ralph Receiver <baz@host.com>']
+  to: [user1@host.com, user2@host.com]
 
   # The email subject prefix. (Can be overriden for each repository.)
   subject: '[git]'
@@ -37,7 +37,6 @@ notifier:
 github:
   # A basic entry specifying settings for a single repository.
   - id: mavam/gitdub
-    from: gitdub
     to: [vallentin@icir.org]
     subject: '[git/gitdub]'
 
