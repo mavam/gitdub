@@ -91,6 +91,7 @@ class GitDub
           if not system('git', 'clone', '--bare', remote, dir)
             STDERR.puts("git failed to clone repository #{user}/#{repo}")
             FileUtils.rm_rf(dir) if File.exists?(dir)
+            return
           end
           # Do not keep empty user directories.
           if Dir[File.join(user, '*')].empty?
