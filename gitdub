@@ -115,6 +115,7 @@ end
 configure do
   set(:port, CONFIG['gitdub']['port'])
   set(:bind, CONFIG['gitdub']['bind'])
+  set(:environment, :production)
 
   dir = CONFIG['gitdub']['directory']
   if dir != '.'
