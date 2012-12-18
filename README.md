@@ -9,19 +9,22 @@ change.
 Setup
 =====
 
-### Dependencies
+Dependencies
+------------
 
   - Ruby 1.9
   - `gem install git sinatra`
-  - [git-notifier][git-notifier]
+  - [git-notifier][git-notifier] (master branch required)
 
-### Installation
+Installation
+------------
 
   1. `cp gitdub /path/to/dir/in/$PATH`
   2. `cp config.yml.example config.yml`
   3. `gitdub config.yml`
 
-### Integration with github
+Integration with github
+-----------------------
 
   1. Navigate to a repository you own, e.g., `https://github.com/user/repo`
   2. Click on *Settings* on the top-right corner
@@ -36,20 +39,23 @@ Customizing
 ===========
 
 The [YAML](http://www.yaml.org) configuration file contains the list of
-repositories that gitdub tracks. It consists of three major sections: *(i)*
-`gitdub` for global parameters, *(ii)* `notifier` for options related to
-git-notifier, and *(iii)* `github` to configure the github repositories to
-track.
+repositories that gitdub tracks. The first section `(gitdub:)` specifies global
+options, such as the interfaces gitdub should bind to and ports to listen on. 
+Moreover, you can control the behavior of the first chunk of data. When setting
+`silent_init:` to true, gitdub will only fast-forward to the current commit and
+begin mailing diffs after the next push (or after hitting the *Test Hook*
+button). Otherwise gitdub sends exactly one email per commit since the first
+commit in the repository.
 
-The first section `gitdub` specifies global options, such as the interfaces
-gitdub should bind to and ports to listen on. The second section describes the
-behavior of git-notifier, e.g., the sender of the email (`from:`), the
-receivers (`to:`), and the prefix of the email subject (`subject:`). The thrid
-section `gitdub` contains a list of repository entries, where each entry must
-at least contain an `id` field. If an item does not contain any further
-options, the globals from the `notifier` section apply. However, in most cases
-it makes sense to override these globals with repository-specific information,
-e.g.:
+The second section `(notifier:)` describes the behavior of git-notifier. Here you
+can the configure a global sender of the emails (`from:`), the receivers
+(`to:`), and the prefix of the email subject (`subject:`).
+
+The third section (`github:`) contains a list of github repository entries,
+where each entry must at least contain an `id` field. If an item does not
+contain any further options, the globals from the `notifier` section apply.
+However, in most cases it makes sense to override the globals with
+repository-specific information, e.g.:
 
     notifier:
       # The email sender. (Can be overriden for each repository.)

@@ -36,21 +36,6 @@ class GitNotifier
 
   public
 
-  def self.init(path, opts = {})
-    state_file = File.join(path, STATE_FILE)
-    if File.exists?(state_file)
-      STDERR.puts('git-notifier state already exists, skipping initialization')
-      return
-    end
-
-    opts[:updateonly] = true
-    if not self.execute(path, opts)
-      raise 'git-notifer could not initialize repository'
-    end
-
-    true
-  end
-
   def self.run(path, opts)
     success = execute(path, Hash[opts.map { |k, v| [MAPPINGS[k] || k, v] }])
     STDERR.puts('git-notifier failed') unless success
@@ -65,7 +50,6 @@ class GitNotifier
       next unless v
       ["--#{k}"] + (!!v == v ? [] : ["#{v}"]) # Ignore non-boolean values.
     end
-    STDERR.puts("git-notifier #{args.flatten.reject { |x| x.nil? }}")
     current = Dir.pwd()
     Dir.chdir(path)
     success = system('git-notifier', *args.flatten.delete_if { |x| x.nil? })
@@ -75,9 +59,10 @@ class GitNotifier
 end
 
 class GitDub
-  def initialize(notifier, github)
-    @notifier = notifier
-    @github = github
+  def initialize(config)
+    @notifier = config['notifier']
+    @github = config['github']
+    @silent_init = config['gitdub']['silent_init']
   end
 
   def process(push)
@@ -99,17 +84,21 @@ class GitDub
       end
     end
 
-    if not File.exists?(File.join(dir, GitNotifier::STATE_FILE))
-      STDERR.puts('initializing git-notifier for new repository')
-      GitNotifier.init(dir, opts)
-    end
-
     github_url = push['repository']['url']
     opts['link'] = "#{github_url}/compare/#{push['before']}...#{push['after']}"
     @github.each do |entry|
       if "#{user}\/#{repo}" =~ Regexp.new(entry['id'])
         STDERR.puts("found matching entry: #{entry['id']}")
-        opts = opts.merge(entry.reject { |k, v| k == 'id' })
+        opts.merge!(entry.reject { |k, v| k == 'id' })
+        if not File.exists?(File.join(dir, GitNotifier::STATE_FILE))
+          if @silent_init
+            STDERR.puts('silently initializing git-notifier for new repository')
+            return GitNotifier.run(dir, opts.merge({updateonly: true}))
+          else
+            STDERR.puts('initializing git-notifier for new repository')
+            GitNotifier.run(dir, opts)
+          end
+        end
         return GitNotifier.run(dir, opts)
       end
     end
@@ -127,10 +116,11 @@ configure do
   dir = CONFIG['gitdub']['directory']
   if dir != '.'
     STDERR.puts("switching directory to #{dir}")
+    Dir.mkdir(dir) unless Dir.exists?(dir)
     Dir.chdir(dir)
   end
 
-  $gitdub = GitDub.new(CONFIG['notifier'], CONFIG['github'])
+  $gitdub = GitDub.new(CONFIG)
 end
 
 get '/' do

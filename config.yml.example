@@ -16,6 +16,12 @@ gitdub:
   #
   allowed_sources: []
 
+  # Flag that determines whether the first arriving data results in sending
+  # emails. If false, gitdub sends out an email for every single commit since
+  # the repository creation. If true, the first arriving data only marks all
+  # existing commits as emailed without actually sending a notice.
+  silent_init: true
+
 notifier:
   # The email sender. (Can be overriden for each repository.)
   from: 'Sam Sender <foo@host.com>'
@@ -29,11 +35,14 @@ notifier:
 # The github configuration. Each entry represents either a single repository or
 # all repositories for a given user/organization name.
 github:
-  # A wildcard entry that specifies settings for all repositories of a user or
-  # organization.
-  - id: mavam/.*
-    subject: '[foo]' # Override global subject.
-    to: [vallentin@icir.org] # Overrides global receiver.
   # A basic entry specifying settings for a single repository.
   - id: mavam/gitdub
-    from: gitdub # Overrides global sender.
+    from: gitdub
+    to: [vallentin@icir.org]
+    subject: '[git/gitdub]'
+
+  # A wildcard entry that specifies settings for all repositories of a user or
+  # organization.
+  #- id: mavam/.*
+  #  subject: '[foo]'
+  #  to: [vallentin@icir.org]
