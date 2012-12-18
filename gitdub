@@ -81,12 +81,9 @@ class GitDub
   end
 
   def process(push)
+    opts = @notifier
     user = push['repository']['owner']['name']
     repo = push['repository']['name']
-    
-    opts = @notifier
-    opts['debug'] = true
-    opts['noupdate'] = true
 
     dir = File.join(user, repo)
     if not Dir.exists?(dir)
