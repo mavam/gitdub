@@ -75,34 +75,35 @@ class GitDub
 
   def process(push)
     opts = @notifier
+    url = push['repository']['url']
     user = push['repository']['owner']['name']
     repo = push['repository']['name']
+    opts['link'] = "#{url}/compare/#{push['before']}...#{push['after']}"
 
-    # Update the corresponding repository via git.
-    dir = File.join(user, repo)
-    if not Dir.exists?(dir)
-      github_url = "git@github.com:#{user}/#{repo}"
-      STDERR.puts("cloning #{github_url}")
-      if not system('git', 'clone', '--bare', github_url, dir)
-        STDERR.puts("git failed to clone repository #{user}/#{repo}")
-        FileUtils.rm_rf(dir) if File.exists?(dir)
-      end
-      # Do not keep empty user directories.
-      if Dir[File.join(user, '*')].empty?
-        Dir.rmdir(user)
-      end
-    end
-
-    github_url = push['repository']['url']
-    opts['link'] = "#{github_url}/compare/#{push['before']}...#{push['after']}"
     @github.each do |entry|
       if "#{user}\/#{repo}" =~ Regexp.new(entry['id'])
         opts.merge!(entry.reject { |k, v| k == 'id' })
+
+        dir = File.join(user, repo)
+        if not Dir.exists?(dir)
+          remote = "git@github.com:#{user}/#{repo}"
+          STDERR.puts("cloning #{remote}")
+          if not system('git', 'clone', '--bare', remote, dir)
+            STDERR.puts("git failed to clone repository #{user}/#{repo}")
+            FileUtils.rm_rf(dir) if File.exists?(dir)
+          end
+          # Do not keep empty user directories.
+          if Dir[File.join(user, '*')].empty?
+            Dir.rmdir(user)
+          end
+        end
+
         state_file = File.join(dir, GitNotifier::STATE_FILE)
         opts.merge!({updateonly: true}) unless File.exists?(state_file)
         return GitNotifier.run(dir, opts)
       end
     end
+    STDERR.puts("no matching repository found for #{user}/#{repo}")
   end
 end
 
