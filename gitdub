@@ -91,14 +91,11 @@ class GitDub
         STDERR.puts("found matching entry: #{entry['id']}")
         opts.merge!(entry.reject { |k, v| k == 'id' })
         if not File.exists?(File.join(dir, GitNotifier::STATE_FILE))
-          if @silent_init
-            STDERR.puts('silently initializing git-notifier for new repository')
-            return GitNotifier.run(dir, opts.merge({updateonly: true}))
-          else
-            STDERR.puts('initializing git-notifier for new repository')
-            GitNotifier.run(dir, opts)
-          end
+          opts.merge!({updateonly: true})
+          STDERR.puts('initializing git-notifier for new repository')
+          return GitNotifier.run(dir, opts)
         end
+          STDERR.puts("running git-notifier for #{user}/#{repo}")
         return GitNotifier.run(dir, opts)
       end
     end
