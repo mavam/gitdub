@@ -88,14 +88,13 @@ class GitDub
     opts['link'] = "#{github_url}/compare/#{push['before']}...#{push['after']}"
     @github.each do |entry|
       if "#{user}\/#{repo}" =~ Regexp.new(entry['id'])
-        STDERR.puts("found matching entry: #{entry['id']}")
         opts.merge!(entry.reject { |k, v| k == 'id' })
         if not File.exists?(File.join(dir, GitNotifier::STATE_FILE))
           opts.merge!({updateonly: true})
           STDERR.puts('initializing git-notifier for new repository')
           return GitNotifier.run(dir, opts)
         end
-          STDERR.puts("running git-notifier for #{user}/#{repo}")
+        STDERR.puts("running git-notifier for #{user}/#{repo}")
         return GitNotifier.run(dir, opts)
       end
     end
@@ -108,7 +107,7 @@ end
 
 configure do
   set(:port, CONFIG['gitdub']['port'])
-  set(:bind, CONFIG['gitdub']['bind']) 
+  set(:bind, CONFIG['gitdub']['bind'])
 
   dir = CONFIG['gitdub']['directory']
   if dir != '.'

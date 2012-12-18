@@ -78,7 +78,8 @@ of entire sets of repositories. Since gitdub processes the list sequentially in
 order of definition, only settings from the first match apply. For example,
 appending an entry for `mavam/foo` would never match.
 
-### Restricting Access
+Restricting Access
+------------------
 
 To prevent unauthorized access to the service, you can restrict the set of
 allowed source IP addresses to github addresses, e.g., via iptables:
