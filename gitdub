@@ -56,7 +56,6 @@ class GitNotifier
       success = system('git', 'pull')
       raise "git pull failed in #{path}" unless success
       args = args.flatten.delete_if { |x| x.nil? }
-      p args
       success = system('git-notifier', *args)
       raise "git-notifier failed in #{path} with args: #{args}" unless success
     rescue Exception => e
