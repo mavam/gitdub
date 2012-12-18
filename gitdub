@@ -70,14 +70,18 @@ class GitDub
     user = push['repository']['owner']['name']
     repo = push['repository']['name']
 
+    # Update the corresponding repository via git.
     dir = File.join(user, repo)
-    if not Dir.exists?(dir)
+    if Dir.exists?(dir)
+      if not Git.open(dir).pull()
+        STDERR.puts("pull failed for #{dir}")
+      end
+    else
       STDERR.puts("cloning new repository into #{dir}")
       if not Git.clone("git@github.com:#{user}/#{repo}", dir)
         STDERR.puts("git failed to clone repository #{user}/#{repo}")
         FileUtils.rm_rf(dir) if File.exists?(dir)
       end
-
       # Do not keep empty user directories.
       if Dir[File.join(user, '*')].empty?
         Dir.rmdir(user)
