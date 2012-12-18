@@ -21,13 +21,9 @@ notifier:
   from: 'Sam Sender <foo@host.com>'
 
   # The list of email receivers. (Can be overriden for each repository.)
-  #
-  # Default: system username
   to: ['Rob Receiver <bar@host.com>', 'Ralph Receiver <baz@host.com>']
 
   # The email subject prefix. (Can be overriden for each repository.)
-  #
-  # Default: '[git]'
   subject: '[git]'
 
 # The github configuration. Each entry represents either a single repository or
