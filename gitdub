@@ -98,7 +98,7 @@ class GitDub
 
         dir = File.join(user, repo)
         if not Dir.exists?(dir)
-          remote = "git@github.com:#{user}/#{repo}"
+          remote = "git://github.com/#{user}/#{repo}.git"
           $logger.debug("> git clone --bare #{remote} #{dir}")
           if not system('git', 'clone', '--bare', remote, dir)
             $logger.error("git failed to clone repository #{user}/#{repo}")
