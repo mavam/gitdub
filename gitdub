@@ -132,7 +132,7 @@ configure do
   $logger = Logger.new(STDERR)
   $logger.formatter = proc do |severity, datetime, progname, msg|
       time = datetime.strftime('%Y-%m-%d %H:%M:%S')
-      "[#{time}] #{severity}  gitdub | #{msg}\n"
+      "[#{time}] #{severity}#{' ' * (5 - severity.size + 1)} gitdub | #{msg}\n"
   end
   $gitdub = GitDub.new(CONFIG)
 end
