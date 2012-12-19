@@ -114,7 +114,7 @@ class GitDub
         state_file = File.join(dir, GitNotifier::STATE_FILE)
         if @silent_init and not File.exists?(state_file)
           $logger.info("configuring git-notifer for silent update")
-          opts.merge!({updateonly: true}) unless File.exists?(state_file)
+          opts = opts.merge({updateonly: true}) unless File.exists?(state_file)
         end
         return GitNotifier.run(dir, opts)
       end
