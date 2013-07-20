@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="gitdub : Detailed diffs of your commits at github" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>gitdub</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/mavam/gitdub">View on GitHub</a>
+
+          <h1 id="project_title">gitdub</h1>
+          <h2 id="project_tagline">Detailed diffs of your commits at github</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/mavam/gitdub/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/mavam/gitdub/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <p><strong>gitdub</strong> is a <a href="https://help.github.com/articles/post-receive-hooks">github web-hook</a> that converts a
+changeset pushed into one email per change via <a href="http://www.icir.org/robin/git-notifier">git-notifier</a>.
+Unlike the existing github email hook, gitdub sends out detailed diffs for each
+change.</p>
+
+<h1>
+<a name="setup" class="anchor" href="#setup"><span class="octicon octicon-link"></span></a>Setup</h1>
+
+<h2>
+<a name="dependencies" class="anchor" href="#dependencies"><span class="octicon octicon-link"></span></a>Dependencies</h2>
+
+<ul>
+<li>Ruby 1.9</li>
+<li><code>gem install sinatra</code></li>
+<li>
+<a href="http://www.icir.org/robin/git-notifier">git-notifier</a> (master branch required)</li>
+</ul><h2>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<ol>
+<li><code>cp gitdub /path/to/dir/in/$PATH</code></li>
+<li><code>cp config.yml.example config.yml</code></li>
+<li><code>gitdub config.yml</code></li>
+</ol><h2>
+<a name="integration-with-github" class="anchor" href="#integration-with-github"><span class="octicon octicon-link"></span></a>Integration with github</h2>
+
+<ol>
+<li>Navigate to a repository you own, e.g., <code>https://github.com/user/repo</code>
+</li>
+<li>Click on <em>Settings</em> on the top-right corner</li>
+<li>Click on <em>Service Hooks</em> in the left sidebar</li>
+<li>Select the first service <em>WebHook URLs</em>
+</li>
+<li>Enter the URL to reach gitdub, e.g., <code>http://gitdub.mydomain.com:8888/</code>
+</li>
+<li>Click <em>Update Settings</em> to save your changes</li>
+<li>Click again on <em>WebHook URLs</em>
+</li>
+<li>Click <em>Test Hook</em> to let github initialize your repository</li>
+</ol><h1>
+<a name="customizing" class="anchor" href="#customizing"><span class="octicon octicon-link"></span></a>Customizing</h1>
+
+<p>The <a href="http://www.yaml.org">YAML</a> configuration file contains the list of
+repositories that gitdub tracks. The first section (<code>gitdub:</code>) specifies global
+options, such as the interfaces gitdub should bind to and ports to listen on. 
+Moreover, you can control the behavior of the first chunk of data. When setting
+<code>silent_init:</code> to true, gitdub will only fast-forward to the current commit and
+begin mailing diffs after the next push (or after hitting the <em>Test Hook</em>
+button). Otherwise gitdub sends exactly one email per commit since the first
+commit in the repository.</p>
+
+<p>The second section (<code>notifier:</code>) describes the behavior of git-notifier. Here you
+can the configure a global sender of the emails (<code>from:</code>), the receivers
+(<code>to:</code>), and the prefix of the email subject (<code>subject:</code>).</p>
+
+<p>The third section (<code>github:</code>) contains a list of github repository entries,
+where each entry must at least contain an <code>id</code> field. If an item does not
+contain any further options, the globals from the <code>notifier</code> section apply.
+However, in most cases it makes sense to override the globals with
+repository-specific information, e.g.:</p>
+
+<pre><code>notifier:
+  # The email sender. (Can be overriden for each repository.)
+  from: 'Sam Sender &lt;foo@host.com&gt;'
+
+  # The email subject prefix. (Can be overriden for each repository.)
+  subject: '[git]'
+
+github:
+  - id: mavam/gitdub
+    subject: '[git/gitdub]'    # Overrides global '[git]' subject prefix.
+    from: vallentin@icir.org   # Overrides global sender.
+    to: [vallentin@icir.org]   # Overrides global receivers.
+
+  - id: mavam/.*
+    from: mavam                # Overrides global sender.
+</code></pre>
+
+<p>Note the regular expression in the second entry. This enables the configuration
+of entire sets of repositories. Since gitdub processes the list sequentially in
+order of definition, only settings from the first match apply. For example,
+appending an entry for <code>mavam/foo</code> would never match.</p>
+
+<h2>
+<a name="restricting-access" class="anchor" href="#restricting-access"><span class="octicon octicon-link"></span></a>Restricting Access</h2>
+
+<p>To prevent unauthorized access to the service, you can restrict the set of
+allowed source IP addresses to github addresses, e.g., via iptables:</p>
+
+<pre><code>iptables -A INPUT -m state --state NEW -m tcp -p tcp \
+    -s 207.97.227.253,50.57.128.197,108.171.174.178 --dport 42042 -j ACCEPT
+</code></pre>
+
+<p>If that's not an option on your machine, you can also perform application-layer
+filtering in gitdub by setting the following configuration option:</p>
+
+<pre><code>allowed_sources: [207.97.227.253, 50.57.128.197, 108.171.174.178]
+</code></pre>
+
+<h1>
+<a name="licence" class="anchor" href="#licence"><span class="octicon octicon-link"></span></a>Licence</h1>
+
+<p>Gitdub comes with a BSD license, please see COPYING for details.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">gitdub maintained by <a href="https://github.com/mavam">mavam</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
