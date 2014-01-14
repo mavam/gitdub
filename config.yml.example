@@ -1,12 +1,19 @@
 gitdub:
+  # The directory where gitdub keeps its per-repository state.
+  directory: .gitdub
+
   # Bind to all addresses by default.
   bind: 0.0.0.0 
 
   # The TCP port to listen on.
   port: 8888
 
-  # The directory where gitdub keeps its per-repository state.
-  directory: .gitdub
+  # SSL options. Relative paths names have to be specified relative to the
+  # above directory.
+  ssl:
+    enable: false
+    cert: /path/to/gitdub.crt
+    key: /path/to/gitdub.key
 
   # Only process POST requests from the these IP addresses (optioanl). If empty
   # or not set, gitdub processes requests from all addresses.

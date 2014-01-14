@@ -3,7 +3,7 @@
 require 'fileutils'
 require 'json'
 require 'logger'
-require 'sinatra'
+require 'sinatra/base'
 require 'yaml'
 
 def which(cmd)
@@ -17,7 +17,7 @@ end
 raise 'could not find git-notifier in $PATH' unless which('git-notifier')
 
 if ARGV.size() != 1
-  STDERR.puts "usage: #{$0} <config.yml>" unless ARGV.size() == 1
+  STDERR.puts "usage: #{$0} <config.yml>"
   exit 1
 end
 
@@ -123,33 +123,56 @@ class GitDub
   end
 end
 
-#
-# Sinatra
-#
+class GitDubServer < Sinatra::Base
+  configure do
+    set(:environment, :production)
+    set(:bind, CONFIG['gitdub']['bind'])
+    set(:port, CONFIG['gitdub']['port'])
+  end
 
-configure do
-  set(:port, CONFIG['gitdub']['port'])
-  set(:bind, CONFIG['gitdub']['bind'])
-  set(:environment, :production)
+  get '/' do
+    "Use #{request.url} as WebHook URL in your github repository settings."
+  end
 
+  post '/' do
+    sources = CONFIG['gitdub']['allowed_sources']
+    if not sources.empty? and not sources.include?(request.ip)
+      $logger.info("discarding request from disallowed address #{request.ip}")
+      return
+    end
+
+    $gitdub.process(JSON.parse(params[:payload]))
+  end
+end
+
+if __FILE__ == $0
   $logger = Logger.new(STDERR)
   $logger.formatter = proc do |severity, datetime, progname, msg|
       time = datetime.strftime('%Y-%m-%d %H:%M:%S')
       "[#{time}] #{severity}#{' ' * (5 - severity.size + 1)}gitdub | #{msg}\n"
   end
+
   $gitdub = GitDub.new(CONFIG)
-end
 
-get '/' do
-  "Use #{request.url} as WebHook URL in your github repository settings."
-end
+  if not CONFIG['gitdub']['ssl']['enable']
+    Sinatra.new(GitDubServer).run!
+  else
+    require 'webrick/https'
+    require 'openssl'
 
-post '/' do
-  sources = CONFIG['gitdub']['allowed_sources']
-  if not sources.empty? and not sources.include?(request.ip)
-    $logger.info("discarding request from disallowed address #{request.ip}")
-    return
+    cert = File.open(CONFIG['gitdub']['ssl']['cert']).read
+    key = File.open(CONFIG['gitdub']['ssl']['key']).read
+    webrick_options = {
+      app:            GitDubServer,
+      BindAddress:    CONFIG['gitdub']['bind'],
+      Port:           CONFIG['gitdub']['port'],
+      Logger:         $logger,
+      SSLEnable:      true,
+      SSLCertificate: OpenSSL::X509::Certificate.new(cert),
+      SSLPrivateKey:  OpenSSL::PKey::RSA.new(key),
+      SSLCertName:    [['CN', WEBrick::Utils::getservername]]
+    }
+
+    Rack::Server.start(webrick_options)
   end
-
-  $gitdub.process(JSON.parse(params[:payload]))
 end
