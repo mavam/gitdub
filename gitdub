@@ -141,7 +141,11 @@ class GitDubServer < Sinatra::Base
       return
     end
 
-    $gitdub.process(JSON.parse(params[:payload]))
+    if not params[:payload]
+      $logger.error("received POST request with empty payload")
+    else
+      $gitdub.process(JSON.parse(params[:payload]))
+    end
   end
 end
 
