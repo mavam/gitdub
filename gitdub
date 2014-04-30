@@ -85,7 +85,7 @@ class GitDub
   end
 
   def process(push)
-    opts = @notifier
+    opts = @notifier.clone
     url = push['repository']['url']
     user = push['repository']['owner']['name']
     repo = push['repository']['name']
@@ -96,6 +96,7 @@ class GitDub
     @github.each do |entry|
       if "#{user}\/#{repo}" =~ Regexp.new(entry['id'])
         opts.merge!(entry.reject { |k, v| k == 'id' })
+        opts['uri'] ||= url
 
         dir = File.join(user, repo)
         if not Dir.exists?(dir)
@@ -112,13 +113,12 @@ class GitDub
           end
         end
 
-        opts = opts.merge({uri: entry['uri'] ? entry['uri'] : url})
-
         state_file = File.join(dir, GitNotifier::STATE_FILE)
         if @silent_init and not File.exists?(state_file)
           $logger.info("configuring git-notifer for silent update")
-          opts = opts.merge({updateonly: true}) unless File.exists?(state_file)
+          opts['updateonly'] = true unless File.exists?(state_file)
         end
+
         return GitNotifier.run(dir, opts)
       end
     end
