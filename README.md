@@ -21,20 +21,20 @@ Installation
 ------------
 
   1. `cp gitdub /path/to/dir/in/$PATH`
-  2. `cp config.yml.example config.yml`
-  3. `gitdub config.yml`
+  1. `cp config.yml.example config.yml`
+  1. `gitdub config.yml`
 
 Integration with github
 -----------------------
 
   1. Navigate to a repository you own, e.g., `https://github.com/user/repo`
-  2. Click on *Settings* on the top-right corner
-  3. Click on *Service Hooks* in the left sidebar
-  4. Select the first service *WebHook URLs*
-  5. Enter the URL to reach gitdub, e.g., `http://gitdub.mydomain.com:8888/`
-  6. Click *Update Settings* to save your changes
-  7. Click again on *WebHook URLs*
-  6. Click *Test Hook* to let github initialize your repository
+  1. Click on *Settings* in the right sidebar
+  1. Click on *Webhooks & Services* in the left sidebar
+  1. Click on *Add Webhook*
+  1. Enter the URL to reach gitdub, e.g., `http://gitdub.mydomain.com:8888/`
+  1. Make sure to use the payload version `application/vnd.github.v3+form`
+  1. Select the radio button *Just the `push` event*
+  1. Click on the green *Add Webhook* button
 
 Customizing
 ===========
