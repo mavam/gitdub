@@ -46,6 +46,8 @@ github:
   - id: mavam/gitdub
     to: [vallentin@icir.org]
     subject: '[git/gitdub]'
+    # Optional customization of repository URI displayed in email body.
+    uri: ssh://git.gitdub.info/real-repo.git
 
   # A wildcard entry that specifies settings for all repositories of a user or
   # organization.

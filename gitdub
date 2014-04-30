@@ -31,7 +31,8 @@ class GitNotifier
   MAPPINGS = {
     'from' => 'sender',
     'to' => 'mailinglist',
-    'subject' => 'emailprefix'
+    'subject' => 'emailprefix',
+    'uri' => 'repouri'
   }
 
   public
@@ -88,7 +89,6 @@ class GitDub
     url = push['repository']['url']
     user = push['repository']['owner']['name']
     repo = push['repository']['name']
-    opts['repouri'] = url
     opts['link'] = "#{url}/compare/#{push['before']}...#{push['after']}"
     $logger.info("received push from #{user}/#{repo} for commits "\
                  "#{push['before'][0..5]}...#{push['after'][0..5]}")
@@ -111,6 +111,8 @@ class GitDub
             Dir.rmdir(user)
           end
         end
+
+        opts = opts.merge({uri: entry['uri'] ? entry['uri'] : url})
 
         state_file = File.join(dir, GitNotifier::STATE_FILE)
         if @silent_init and not File.exists?(state_file)
