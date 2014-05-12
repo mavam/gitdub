@@ -44,6 +44,7 @@ notifier:
 github:
   # A basic entry specifying settings for a single repository.
   - id: mavam/gitdub
+    protocol: ssh # Allowed protocols: git (default), ssh, https
     to: [vallentin@icir.org]
     subject: '[git/gitdub]'
     # Optional customization of repository URI displayed in email body.

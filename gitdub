@@ -97,10 +97,22 @@ class GitDub
       if "#{user}\/#{repo}" =~ Regexp.new(entry['id'])
         opts.merge!(entry.reject { |k, v| k == 'id' })
         opts['uri'] ||= url
+        opts['protocol'] ||= 'git'
+
+        remote = case opts['protocol']
+                 when /git/
+                   "git://github.com/#{user}/#{repo}.git"
+                 when /ssh/
+                   "git@github.com:#{user}/#{repo}.git"
+                 when /https/
+                   "https://github.com/#{user}/#{repo}.git"
+                 else
+                   $logger.error("invalid protocol: #{opts['protocol']}")
+                   next
+                 end
 
         dir = File.join(user, repo)
         if not Dir.exists?(dir)
-          remote = "git://github.com/#{user}/#{repo}.git"
           $logger.debug("> git clone --bare #{remote} #{dir}")
           if not system('git', 'clone', '--bare', remote, dir)
             $logger.error("git failed to clone repository #{user}/#{repo}")
