@@ -156,25 +156,7 @@ def which(cmd)
   nil
 end
 
-if __FILE__ == $0
-  $logger = Logger.new(STDERR)
-  $logger.formatter = proc do |severity, datetime, progname, msg|
-      time = datetime.strftime('%Y-%m-%d %H:%M:%S')
-      "[#{time}] #{severity}#{' ' * (5 - severity.size + 1)}gitdub | #{msg}\n"
-  end
-
-  unless which('git-notifier')
-    $logger.error('could not find git-notifier in $PATH')
-    exit 1
-  end
-
-  if ARGV.size() != 1
-    STDERR.puts "usage: #{$0} <config.yml>"
-    exit 1
-  end
-
-  config = YAML.load_file(ARGV[0])
-
+def run(config)
   GitDubServer.set(:gitdub, GitDub.new(config))
   GitDubServer.set(:bind, config['gitdub']['bind'])
   GitDubServer.set(:port, config['gitdub']['port'])
@@ -201,4 +183,46 @@ if __FILE__ == $0
 
     Rack::Server.start(webrick_options)
   end
+end
+
+if __FILE__ == $0
+  $logger = Logger.new(STDERR)
+  $logger.formatter = proc do |severity, datetime, progname, msg|
+      time = datetime.strftime('%Y-%m-%d %H:%M:%S')
+      "[#{time}] #{severity}#{' ' * (5 - severity.size + 1)}gitdub | #{msg}\n"
+  end
+
+  unless which('git-notifier')
+    $logger.error('could not find git-notifier in $PATH')
+    exit 1
+  end
+
+  if ARGV.size() != 1
+    STDERR.puts "usage: #{$0} <config.yml>"
+    exit 1
+  end
+
+  file = File.absolute_path(ARGV[0])
+  config = YAML.load_file(file)
+
+  sinatra = Thread.new { run(config) }
+
+  if config['gitdub']['monitor'] > 0
+    last_modified = Time.at(0)
+    loop do
+      mtime = File.mtime(file)
+      if mtime > last_modified
+        last_modified = mtime
+        $logger.info("re-reading configuration file")
+        config = YAML.load_file(file)
+        GitDubServer.set(:gitdub, GitDub.new(config))
+        break if config['gitdub']['monitor'] == 0
+      end
+
+      break unless sinatra.alive?
+      sleep(config['gitdub']['monitor'])
+    end
+  end
+
+  sinatra.join
 end

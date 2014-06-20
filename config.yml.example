@@ -29,6 +29,12 @@ gitdub:
   # existing commits as emailed without actually sending a notice.
   silent_init: true
 
+  # The interval in seconds of how often to check the file for modifications.
+  # If the modification time of the configuration file is new than the time it
+  # was read last, gitdub re-reads all configuration values except for bind,
+  # port, and ssl.
+  monitor: 0
+
 notifier:
   # The email sender. (Can be overriden for each repository.)
   from: gitdub
