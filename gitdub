@@ -38,7 +38,8 @@ class GitNotifier
   public
 
   def self.run(path, opts)
-    success = execute(path, Hash[opts.map { |k, v| [MAPPINGS[k] || k, v] }])
+    args = Hash[opts.map { |k, v| [MAPPINGS[k] || k, v] }]
+    success = execute(path, args)
     $logger.error('git-notifier failed') unless success
     success
   end
@@ -95,11 +96,11 @@ class GitDub
 
     @github.each do |entry|
       if "#{user}\/#{repo}" =~ Regexp.new(entry['id'])
-        opts.merge!(entry.reject { |k, v| k == 'id' })
+        opts.merge!(entry.reject { |k, v| k == 'id' || k == 'protocol'})
         opts['uri'] ||= url
-        opts['protocol'] ||= 'git'
 
-        remote = case opts['protocol']
+        entry['protocol'] ||= 'git'
+        remote = case entry['protocol']
                  when /git/
                    "git://github.com/#{user}/#{repo}.git"
                  when /ssh/
@@ -107,7 +108,7 @@ class GitDub
                  when /https/
                    "https://github.com/#{user}/#{repo}.git"
                  else
-                   $logger.error("invalid protocol: #{opts['protocol']}")
+                   $logger.error("invalid protocol: #{entry['protocol']}")
                    next
                  end
 
