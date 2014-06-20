@@ -32,7 +32,7 @@ Integration with github
   1. Click on *Webhooks & Services* in the left sidebar
   1. Click on *Add Webhook*
   1. Enter the URL to reach gitdub, e.g., `http://gitdub.mydomain.com:8888/`
-  1. Make sure to use the payload version `application/vnd.github.v3+form`
+  1. Set the content type to `application/x-www-from-urlencoded`
   1. Select the radio button *Just the `push` event*
   1. Click on the green *Add Webhook* button
 
