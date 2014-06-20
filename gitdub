@@ -6,23 +6,6 @@ require 'logger'
 require 'sinatra/base'
 require 'yaml'
 
-def which(cmd)
-  ENV['PATH'].split(File::PATH_SEPARATOR).each do |path|
-    exe = "#{path}/#{cmd}"
-    return exe if File.executable?(exe)
-  end
-  nil
-end
-
-raise 'could not find git-notifier in $PATH' unless which('git-notifier')
-
-if ARGV.size() != 1
-  STDERR.puts "usage: #{$0} <config.yml>"
-  exit 1
-end
-
-CONFIG = YAML.load_file(ARGV[0])
-
 class GitNotifier
   STATE_FILE = '.git-notifier.dat'
 
@@ -142,8 +125,8 @@ end
 class GitDubServer < Sinatra::Base
   configure do
     set(:environment, :production)
-    set(:bind, CONFIG['gitdub']['bind'])
-    set(:port, CONFIG['gitdub']['port'])
+    set(:bind, settings.bind)
+    set(:port, settings.port)
   end
 
   get '/' do
@@ -151,7 +134,7 @@ class GitDubServer < Sinatra::Base
   end
 
   post '/' do
-    sources = CONFIG['gitdub']['allowed_sources']
+    sources = settings.allowed_sources
     if not sources.empty? and not sources.include?(request.ip)
       $logger.info("discarding request from disallowed address #{request.ip}")
       return
@@ -160,9 +143,17 @@ class GitDubServer < Sinatra::Base
     if not params[:payload]
       $logger.error("received POST request with empty payload")
     else
-      $gitdub.process(JSON.parse(params[:payload]))
+      settings.gitdub.process(JSON.parse(params[:payload]))
     end
   end
+end
+
+def which(cmd)
+  ENV['PATH'].split(File::PATH_SEPARATOR).each do |path|
+    exe = "#{path}/#{cmd}"
+    return exe if File.executable?(exe)
+  end
+  nil
 end
 
 if __FILE__ == $0
@@ -172,20 +163,35 @@ if __FILE__ == $0
       "[#{time}] #{severity}#{' ' * (5 - severity.size + 1)}gitdub | #{msg}\n"
   end
 
-  $gitdub = GitDub.new(CONFIG)
+  unless which('git-notifier')
+    $logger.error('could not find git-notifier in $PATH')
+    exit 1
+  end
 
-  if not CONFIG['gitdub']['ssl']['enable']
+  if ARGV.size() != 1
+    STDERR.puts "usage: #{$0} <config.yml>"
+    exit 1
+  end
+
+  config = YAML.load_file(ARGV[0])
+
+  GitDubServer.set(:gitdub, GitDub.new(config))
+  GitDubServer.set(:bind, config['gitdub']['bind'])
+  GitDubServer.set(:port, config['gitdub']['port'])
+  GitDubServer.set(:allowed_sources, config['gitdub']['allowed_sources'])
+
+  if not config['gitdub']['ssl']['enable']
     Sinatra.new(GitDubServer).run!
   else
     require 'webrick/https'
     require 'openssl'
 
-    cert = File.open(CONFIG['gitdub']['ssl']['cert']).read
-    key = File.open(CONFIG['gitdub']['ssl']['key']).read
+    cert = File.open(config['gitdub']['ssl']['cert']).read
+    key = File.open(config['gitdub']['ssl']['key']).read
     webrick_options = {
       app:            GitDubServer,
-      BindAddress:    CONFIG['gitdub']['bind'],
-      Port:           CONFIG['gitdub']['port'],
+      BindAddress:    config['gitdub']['bind'],
+      Port:           config['gitdub']['port'],
       Logger:         $logger,
       SSLEnable:      true,
       SSLCertificate: OpenSSL::X509::Certificate.new(cert),
