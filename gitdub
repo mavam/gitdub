@@ -141,9 +141,23 @@ class GitDubServer < Sinatra::Base
     end
 
     if not params[:payload]
-      $logger.error("received POST request with empty payload")
+      $logger.error('received POST request with empty payload')
     else
-      settings.gitdub.process(JSON.parse(params[:payload]))
+      json = JSON.parse(params[:payload])
+      if not json
+        $log.error('received invalid JSON:')
+        STDERR.puts(params[:payload])
+      else
+        STDERR.puts(JSON.pretty_generate(json)) if settings.debug_post
+        # Ideally we'd use the X-Github-Event header to distinguish a ping from
+        # an ordinary push. However, the 'headers' variable in Sinatra only
+        # contains Content-Type, so we introspect the JSON instead.
+        if json['zen']
+          $logger.debug('got ping from github')
+        else
+          settings.gitdub.process(json)
+        end
+      end
     end
   end
 end
@@ -160,6 +174,7 @@ def run(config)
   GitDubServer.set(:gitdub, GitDub.new(config))
   GitDubServer.set(:bind, config['gitdub']['bind'])
   GitDubServer.set(:port, config['gitdub']['port'])
+  GitDubServer.set(:debug_post, config['gitdub']['debug'])
   GitDubServer.set(:allowed_sources, config['gitdub']['allowed_sources'])
 
   if not config['gitdub']['ssl']['enable']
@@ -216,6 +231,8 @@ if __FILE__ == $0
         $logger.info("re-reading configuration file")
         config = YAML.load_file(file)
         GitDubServer.set(:gitdub, GitDub.new(config))
+        GitDubServer.set(:debug_post, config['gitdub']['debug'])
+        GitDubServer.set(:allowed_sources, config['gitdub']['allowed_sources'])
         break if config['gitdub']['monitor'] == 0
       end
 

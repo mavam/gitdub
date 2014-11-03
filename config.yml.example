@@ -3,7 +3,7 @@ gitdub:
   directory: .gitdub
 
   # Bind to all addresses by default.
-  bind: 0.0.0.0 
+  bind: 0.0.0.0
 
   # The TCP port to listen on.
   port: 8888
@@ -15,9 +15,12 @@ gitdub:
     cert: /path/to/gitdub.crt
     key: /path/to/gitdub.key
 
+  # Enable debugging. This prints the contents of the HTTP POST body to STDERR.
+  debug: false
+
   # Only process POST requests from the these IP addresses (optioanl). If empty
   # or not set, gitdub processes requests from all addresses.
-  # 
+  #
   # Github only.
   #allowed_sources: [207.97.227.253, 50.57.128.197, 108.171.174.178]
   #
