@@ -93,16 +93,24 @@ filtering in gitdub by setting the following configuration option:
 
     allowed_sources: [192.30.252.0/22, 185.199.108.0/22, 140.82.112.0/20]
 
-For an up-to-date listing of the github ip ranges, check the hooks section under 
-https://api.github.com/meta 
+For an up-to-date listing of the github ip ranges, check the hooks section
+under https://api.github.com/meta.
 
 Installation as a service on Linux
 ==================================
-Once you have gitdub working, you probably will want to make it into a service, so that it'll automatically start on reboot.
 
-You can either write your own script or you can use a pre-made script from this [repository](https://github.com/frdmn/service-daemons/). You just need to make a few minor tweaks to make it workable. Here is the [instructions page](https://blog.frd.mn/how-to-set-up-proper-startstop-services-ubuntu-debian-mac-windows/) with general details for this repository.
+Once you have gitdub working, you probably will want to make it into a service,
+so that it'll automatically start on reboot.
 
-If you are on a Ubuntu or a similar system that supports the `rc.d` system you can use [debian rc.d template](https://github.com/frdmn/service-daemons/blob/master/debian):
+You can either write your own script or you can use a pre-made script from this
+[repository](https://github.com/frdmn/service-daemons/). You just need to make
+a few minor tweaks to make it workable. Here is the [instructions
+page](https://blog.frd.mn/how-to-set-up-proper-startstop-services-ubuntu-debian-mac-windows/)
+with general details for this repository.
+
+If you are on a Ubuntu or a similar system that supports the `rc.d` system you
+can use [debian rc.d
+template](https://github.com/frdmn/service-daemons/blob/master/debian):
 
     wget https://raw.github.com/frdmn/service-daemons/master/debian -O /etc/init.d/gitdub
 
@@ -117,7 +125,8 @@ Edit `/etc/init.d/gitdub` and change the example settings to:
     USER="nobody"
     GROUP="nobody"
 
-Depending on the user/group you are going to run it under you may have to change `USER` and `GROUP` settings as well.
+Depending on the user/group you are going to run it under, you may have to
+change `USER` and `GROUP` settings as well.
 
 Make sure the script is executable:
 
@@ -135,7 +144,9 @@ Stop the service with:
 
     service gitdub stop
 
-If your system doesn't support the `rc.d` approach, check the [repository](https://github.com/frdmn/service-daemons/) for other methods.
+If your system doesn't support the `rc.d` approach, check the
+[service-daemons repository](https://github.com/frdmn/service-daemons/) for
+other methods.
 
 Licence
 =======
