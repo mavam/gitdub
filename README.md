@@ -86,13 +86,15 @@ To prevent unauthorized access to the service, you can restrict the set of
 allowed source IP addresses to github addresses, e.g., via iptables:
 
     iptables -A INPUT -m state --state NEW -m tcp -p tcp \
-        -s 207.97.227.253,50.57.128.197,108.171.174.178 --dport 42042 -j ACCEPT
+        -s 192.30.252.0/22,185.199.108.0/22,140.82.112.0/20 --dport 42042 -j ACCEPT
 
 If that's not an option on your machine, you can also perform application-layer
 filtering in gitdub by setting the following configuration option:
 
-    allowed_sources: [207.97.227.253, 50.57.128.197, 108.171.174.178]
+    allowed_sources: [192.30.252.0/22, 185.199.108.0/22, 140.82.112.0/20]
 
+For an up-to-date listing of the github ip ranges, check the hooks section under 
+https://api.github.com/meta 
 
 Licence
 =======
