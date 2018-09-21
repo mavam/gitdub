@@ -136,7 +136,7 @@ class GitDubServer < Sinatra::Base
 
   post '/' do
     sources = settings.allowed_sources
-    if not sources.empty? and sources.none?{|block| IPAddr.new(block) === request.ip}
+    if not sources.empty? and sources.none? { |x| IPAddr.new(x) === request.ip }
       $logger.info("discarding request from disallowed address #{request.ip}")
       return
     end
