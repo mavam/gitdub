@@ -5,6 +5,7 @@ require 'json'
 require 'logger'
 require 'sinatra/base'
 require 'yaml'
+require 'ipaddr'
 
 class GitNotifier
   STATE_FILE = '.git-notifier.dat'
@@ -135,7 +136,7 @@ class GitDubServer < Sinatra::Base
 
   post '/' do
     sources = settings.allowed_sources
-    if not sources.empty? and not sources.include?(request.ip)
+    if not sources.empty? and sources.none?{|block| IPAddr.new(block) === request.ip}
       $logger.info("discarding request from disallowed address #{request.ip}")
       return
     end

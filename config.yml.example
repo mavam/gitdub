@@ -21,8 +21,9 @@ gitdub:
   # Only process POST requests from the these IP addresses (optioanl). If empty
   # or not set, gitdub processes requests from all addresses.
   #
-  # Github only.
-  #allowed_sources: [207.97.227.253, 50.57.128.197, 108.171.174.178]
+  # Github only: watch for up-to-date listing in the hooks section 
+  # here https://api.github.com/meta
+  #allowed_sources: [192.30.252.0/22, 185.199.108.0/22, 140.82.112.0/20]
   #
   allowed_sources: []
 
